@@ -3,6 +3,9 @@ package com.devsuperior.userdept.controllers;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.devsuperior.userdept.entities.User;
 import com.devsuperior.userdept.repositories.UserRepository;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping(value = "/users")
@@ -39,5 +44,17 @@ public class UserController {
        User result = repository.save(user);
        
        return result;
+    }
+
+    @DeleteMapping(value = "/delete/{id}")
+    public ResponseEntity<String> delete(@PathVariable Long id) {
+        Optional<User> optionalUser = repository.findById(id);
+    
+        if (optionalUser.isEmpty()) {
+            return new ResponseEntity<>("Usuário não encontrado com o ID: " + id, HttpStatus.NOT_FOUND);
+        }
+    
+        repository.deleteById(id);
+        return ResponseEntity.ok("Usuário deletado com sucesso");
     }
 }  

@@ -25,7 +25,6 @@ public class User {
     public User() {
     }
 
-    // Correção dos métodos getters e setters
     public Long getId() {
         return id;
     }
