@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.devsuperior.userdept.entities.User;
@@ -32,11 +33,15 @@ public class UserController {
        return result;
     }
 
-    @GetMapping(value = "/{id}")
-    public User findById(@PathVariable Long id){
-       User result = repository.findById(id).get();
+    @GetMapping(value = "/search")
+    public ResponseEntity<?> findByIds(@RequestParam List<Long> id){
+       List<User> result = repository.findAllById(id);
        
-       return result;
+       if(!result.isEmpty()){
+           return ResponseEntity.ok().body(result);
+       } else {
+           return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado com o ID: " + id);
+       }
     }
     
     @PostMapping
