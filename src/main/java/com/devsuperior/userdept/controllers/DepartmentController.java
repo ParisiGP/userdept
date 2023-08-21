@@ -3,14 +3,17 @@ package com.devsuperior.userdept.controllers;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -38,19 +41,6 @@ public class DepartmentController {
         return result;
     }
 
-    //   @GetMapping(value = "/{id}")
-    //   public ResponseEntity<?> findById(@PathVariable Long id) {
-    //       Department result = repository.findById(id).orElse(null);
-
-    //       if(result != null){
-    //           return ResponseEntity.ok().body(result);
-    //       }
-    //       else{
-    //           return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Departamento não encontrado com o ID: " + id);
-    //       }
-
-    //   }
-     
     @GetMapping("/search")
     public ResponseEntity<?> findByIds(@RequestParam List<Long> id) {
         List<Department> results = repository.findAllById(id);
@@ -89,4 +79,43 @@ public class DepartmentController {
     repository.deleteById(id);
     return ResponseEntity.ok("Departamento deletado com sucesso");
 }
+
+@PutMapping("/{id}")
+public ResponseEntity<?> updateDepartment(@PathVariable Long id, @RequestBody Department updatedDepartment) {
+    Optional<Department> optionalDepartment = repository.findById(id);
+
+    if (optionalDepartment.isEmpty()) {
+        return new ResponseEntity<>("Departamento não encontrado com o ID: " + id, HttpStatus.NOT_FOUND);
+    }
+
+    Department department = optionalDepartment.get();
+
+    // Atualiza o campo "name" com o valor do objeto atualizado
+    department.setName(updatedDepartment.getName());
+
+    repository.save(department); // Salva as alterações no banco de dados
+
+    return ResponseEntity.ok("Departamento atualizado com sucesso");
+}
+
+@PatchMapping("/{id}")
+public ResponseEntity<?> updateDepartmentPartial(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
+    Optional<Department> optionalDepartment = repository.findById(id);
+
+    if (optionalDepartment.isEmpty()) {
+        return new ResponseEntity<>("Departamento não encontrado com o ID: " + id, HttpStatus.NOT_FOUND);
+    }
+
+    Department department = optionalDepartment.get();
+
+    // Atualiza os campos específicos com os valores do objeto de atualização
+    if (updates.containsKey("name")) {
+        department.setName((String) updates.get("name"));
+    }
+
+    repository.save(department); // Salva as alterações no banco de dados
+
+    return ResponseEntity.ok("Departamento atualizado parcialmente com sucesso");
+}
+
 }
