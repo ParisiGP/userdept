@@ -94,7 +94,8 @@ public ResponseEntity<?> updateUserPartially(@PathVariable Long id, @RequestBody
     Optional<User> optionalUser = repository.findById(id);
 
     if (optionalUser.isEmpty()) {
-        return new ResponseEntity<>("Usuário não encontrado com o ID: " + id, HttpStatus.NOT_FOUND);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(new ApiResponse(false, "Usuário não encontrado com o ID: " + id));
     }
 
     User user = optionalUser.get();
@@ -111,7 +112,28 @@ public ResponseEntity<?> updateUserPartially(@PathVariable Long id, @RequestBody
 
     repository.save(user);
 
-    return ResponseEntity.ok("Usuário atualizado com sucesso");
+    // Resposta padrão em formato JSON
+    String successMessage = "Usuário atualizado com sucesso";
+    return ResponseEntity.ok().body(new ApiResponse(true, successMessage));
 }
     
-}  
+
+
+    static class ApiResponse {
+        private boolean success;
+        private String message;
+
+        public ApiResponse(boolean success, String message) {
+            this.success = success;
+            this.message = message;
+        }
+
+        public boolean isSuccess() {
+            return success;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+    }
+}
