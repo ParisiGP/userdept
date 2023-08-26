@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-
 import com.devsuperior.userdept.entities.User;
 import com.devsuperior.userdept.repositories.UserRepository;
 
@@ -31,50 +30,56 @@ public class UserController {
 
     @Autowired
     private UserRepository repository;
-    
-    @GetMapping
-    public List<User> findAll(){
-       List<User> result = repository.findAll();
-       
-       return result;
-    }
 
+    @GetMapping
+    public List<User> findAll() {
+        List<User> result = repository.findAll();
+
+        return result;
+    }
 
     @GetMapping(value = "/search")
-    public ResponseEntity<?> findByIds(@RequestParam List<Long> id){
-       List<User> result = repository.findAllById(id);
-       
-       if(!result.isEmpty()){
-           return ResponseEntity.ok().body(result);
-       } else {
-           return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado com o ID: " + id);
-       }
+    public ResponseEntity<?> findByIds(@RequestParam List<Long> id) {
+        List<User> result = repository.findAllById(id);
+
+        if (!result.isEmpty()) {
+            return ResponseEntity.ok().body(result);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(false, "Usuário não encontrado com o ID: " + id));
+        }
     }
-    
+
     @PostMapping
-    public User Insert(@RequestBody User user){
-       User result = repository.save(user);
-       
-       return result;
+    public ResponseEntity<?> insertUser(@RequestBody User user) {
+        try {
+            // Processa o usuário e tenta salvar
+            User result = repository.save(user);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            // Em caso de erro, retorna uma resposta genérica com código 500
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Erro ao salvar o usuário."));
+        }
     }
 
     @DeleteMapping(value = "/delete/{id}")
     public ResponseEntity<String> delete(@PathVariable Long id) {
         Optional<User> optionalUser = repository.findById(id);
-    
+
         if (optionalUser.isEmpty()) {
             return new ResponseEntity<>("Usuário não encontrado com o ID: " + id, HttpStatus.NOT_FOUND);
         }
-    
+
         repository.deleteById(id);
         return ResponseEntity.ok("Usuário deletado com sucesso");
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User updateUser){
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User updateUser) {
         Optional<User> optionalUser = repository.findById(id);
 
-        if(optionalUser.isEmpty()){
+        if (optionalUser.isEmpty()) {
             return new ResponseEntity<>("Usuário não encontrado com o ID: " + id, HttpStatus.NOT_FOUND);
         }
 
@@ -90,34 +95,39 @@ public class UserController {
     }
 
     @PatchMapping("/{id}")
-public ResponseEntity<?> updateUserPartially(@PathVariable Long id, @RequestBody User partialUpdate) {
-    Optional<User> optionalUser = repository.findById(id);
+    public ResponseEntity<?> updateUserPartially(@PathVariable Long id, @RequestBody User partialUpdate) {
+        Optional<User> optionalUser = repository.findById(id);
 
-    if (optionalUser.isEmpty()) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body(new ApiResponse(false, "Usuário não encontrado com o ID: " + id));
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(false, "Usuário não encontrado com o ID: " + id));
+        }
+
+        User user = optionalUser.get();
+
+        if (partialUpdate.getName() != null) {
+            user.setName(partialUpdate.getName());
+        }
+        if (partialUpdate.getEmail() != null) {
+            user.setEmail(partialUpdate.getEmail());
+        }
+        if (partialUpdate.getDepartment() != null) {
+            user.setDepartment(partialUpdate.getDepartment());
+        }
+
+        try {
+            repository.save(user);
+
+            // Resposta padrão em formato JSON
+            String successMessage = "Usuário atualizado com sucesso";
+            return ResponseEntity.ok().body(new ApiResponse(true, successMessage));
+        } catch (Exception e) {
+            // Em caso de erro, retorna uma resposta genérica com código 500
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Editar usuário falhou."));
+        }
+
     }
-
-    User user = optionalUser.get();
-
-    if (partialUpdate.getName() != null) {
-        user.setName(partialUpdate.getName());
-    }
-    if (partialUpdate.getEmail() != null) {
-        user.setEmail(partialUpdate.getEmail());
-    }
-    if (partialUpdate.getDepartment() != null) {
-        user.setDepartment(partialUpdate.getDepartment());
-    }
-
-    repository.save(user);
-
-    // Resposta padrão em formato JSON
-    String successMessage = "Usuário atualizado com sucesso";
-    return ResponseEntity.ok().body(new ApiResponse(true, successMessage));
-}
-    
-
 
     static class ApiResponse {
         private boolean success;
